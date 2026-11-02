@@ -126,7 +126,10 @@ async function renderAllPages() {
     wrapper.style.height = `${viewport.height}px`;
 
     const canvas  = document.createElement("canvas");
-    const context = canvas.getContext("2d", { alpha: false });
+  const context = canvas.getContext("2d", {
+    alpha: false,
+    willReadFrequently: true
+});
     const outputScale = window.devicePixelRatio || 1;
     canvas.width  = Math.floor(viewport.width  * outputScale);
     canvas.height = Math.floor(viewport.height * outputScale);
@@ -149,29 +152,58 @@ async function renderAllPages() {
     // After the page is fully painted, sample the RENDERED canvas pixels to
     // get the true displayed colour of each text run.  This is far more
     // reliable than item.color (which is often wrong / black for many PDFs).
-    function sampleCanvasColor(cssX, cssY, cssW, cssH) {
-      try {
-        const ctx2d = canvas.getContext("2d");
-        // Vertical centre of the glyph
-        const py = Math.round((cssY + cssH * 0.45) * outputScale);
-        if (py < 0 || py >= canvas.height) return null;
+  
+function sampleCanvasColor(cssX, cssY, cssW, cssH) {
+  try {
+    const ctx2d = canvas.getContext("2d", {
+      willReadFrequently: true
+    });
 
-        const x0 = Math.max(0, Math.round(cssX * outputScale) + 1);
-        const x1 = Math.min(canvas.width - 1,
-                            Math.round((cssX + cssW * 0.7) * outputScale));
+    // Vertical centre of the glyph
+    const py = Math.round((cssY + cssH * 0.45) * outputScale);
+    if (py < 0 || py >= canvas.height) return null;
 
-        // Walk horizontally and return the first clearly non-white pixel
-        const step = Math.max(1, Math.round((x1 - x0) / 30));
-        for (let px = x0; px <= x1; px += step) {
-          const d = ctx2d.getImageData(px, py, 1, 1).data;
-          // Skip background (near-white) and fully-transparent pixels
-          if (d[3] < 50) continue;
-          if (d[0] > 238 && d[1] > 238 && d[2] > 238) continue;
-          return `${d[0]},${d[1]},${d[2]}`;
-        }
-        return null;
-      } catch { return null; }
+    const x0 = Math.max(0, Math.round(cssX * outputScale) + 1);
+    const x1 = Math.min(
+      canvas.width - 1,
+      Math.round((cssX + cssW * 0.7) * outputScale)
+    );
+
+    if (x1 < x0) return null;
+
+    // Read the entire horizontal row only once
+    const imageData = ctx2d.getImageData(
+      x0,
+      py,
+      x1 - x0 + 1,
+      1
+    );
+
+    const pixels = imageData.data;
+    const step = Math.max(1, Math.round((x1 - x0) / 30));
+
+    for (let px = x0; px <= x1; px += step) {
+      const index = (px - x0) * 4;
+
+      const r = pixels[index];
+      const g = pixels[index + 1];
+      const b = pixels[index + 2];
+      const a = pixels[index + 3];
+
+      // Skip transparent and near-white pixels
+      if (a < 50) continue;
+      if (r > 238 && g > 238 && b > 238) continue;
+
+      return `${r},${g},${b}`;
     }
+
+    return null;
+  } catch (error) {
+    console.warn("Canvas color sampling failed:", error);
+    return null;
+  }
+}
+
 
     const text = await page.getTextContent();
     for (const item of text.items) {
