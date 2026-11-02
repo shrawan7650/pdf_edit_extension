@@ -31,7 +31,7 @@ The build copies PDF.js and pdf-lib into `vendor/`. After this setup, the extens
 - Export currently covers selected text with a white rectangle and redraws replacement text using Helvetica. It preserves approximate position, size, and color, but **does not guarantee the original embedded font, exact kerning, or background appearance**.
 - Deletion is a visual cover, not secure redaction. The original text may remain recoverable from the PDF's underlying content.
 - Scanned/image-only PDFs have no selectable text and need OCR, which is not included.
-- Complex PDFs with rotated, vertical, transparent, or overlapping text may not edit accurately.
+- Complex PDFs with rotated and , vertical, transparent, or overlapping text may not edit accurately.
 - A download is generated after each applied edit/delete. Use Save & download to export accumulated changes.
 
 ## Privacy

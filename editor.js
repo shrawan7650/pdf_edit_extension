@@ -145,6 +145,34 @@ async function renderAllPages() {
       transform: outputScale !== 1 ? [outputScale,0,0,outputScale,0,0] : null
     }).promise;
 
+    // ── Canvas pixel sampler ──────────────────────────────────────────────
+    // After the page is fully painted, sample the RENDERED canvas pixels to
+    // get the true displayed colour of each text run.  This is far more
+    // reliable than item.color (which is often wrong / black for many PDFs).
+    function sampleCanvasColor(cssX, cssY, cssW, cssH) {
+      try {
+        const ctx2d = canvas.getContext("2d");
+        // Vertical centre of the glyph
+        const py = Math.round((cssY + cssH * 0.45) * outputScale);
+        if (py < 0 || py >= canvas.height) return null;
+
+        const x0 = Math.max(0, Math.round(cssX * outputScale) + 1);
+        const x1 = Math.min(canvas.width - 1,
+                            Math.round((cssX + cssW * 0.7) * outputScale));
+
+        // Walk horizontally and return the first clearly non-white pixel
+        const step = Math.max(1, Math.round((x1 - x0) / 30));
+        for (let px = x0; px <= x1; px += step) {
+          const d = ctx2d.getImageData(px, py, 1, 1).data;
+          // Skip background (near-white) and fully-transparent pixels
+          if (d[3] < 50) continue;
+          if (d[0] > 238 && d[1] > 238 && d[2] > 238) continue;
+          return `${d[0]},${d[1]},${d[2]}`;
+        }
+        return null;
+      } catch { return null; }
+    }
+
     const text = await page.getTextContent();
     for (const item of text.items) {
       if (!item.str?.trim()) continue;
@@ -159,6 +187,23 @@ async function renderAllPages() {
       span.dataset.fontSize = String(fontHeight / scale);
       span.dataset.scale    = String(scale);
       span.dataset.origWidth = String(Math.max(2, item.width * scale));
+
+      // ── Capture original text colour ──────────────────────────────────
+      // Priority 1: sample from the already-rendered canvas (catches ALL
+      //             colour spaces — RGB, CMYK, spot, etc.)
+      // Priority 2: item.color from pdf.js (works on simple PDFs)
+      // Priority 3: fallback black
+      const cssItemX = tx[4];
+      const cssItemY = tx[5] - fontHeight;
+      const cssItemW = Math.max(2, item.width * scale);
+      const sampled  = sampleCanvasColor(cssItemX, cssItemY, cssItemW, fontHeight);
+      if (sampled) {
+        span.dataset.pdfColor = sampled;
+      } else if (item.color && item.color.length >= 3) {
+        span.dataset.pdfColor = `${item.color[0]},${item.color[1]},${item.color[2]}`;
+      } else {
+        span.dataset.pdfColor = "0,0,0";
+      }
       span.style.left       = `${tx[4]}px`;
       span.style.top        = `${tx[5] - fontHeight}px`;
       span.style.fontSize   = `${fontHeight}px`;
@@ -341,13 +386,15 @@ async function exportPdf() {
         const size     = Math.max(4, Math.min(fontSize, pdfRect.height * 0.92));
         let drawSize   = size;
         while (drawSize > 4 && font.widthOfTextAtSize(curText, drawSize) > pdfRect.width + 1) drawSize -= 0.5;
-        // Use black for PDF output — the green/red colours are only UI indicators
+
+        // Restore original PDF colour (stored during render, so green/red UI badges don't bleed in)
+        const [cr, cg, cb] = (span.dataset.pdfColor || "0,0,0").split(",").map(Number);
         pageEl.drawText(curText, {
           x:    pdfRect.x,
           y:    pdfRect.y + Math.max(0, (pdfRect.height - drawSize) * 0.18),
           size: drawSize,
           font,
-          color: rgb(0, 0, 0)
+          color: rgb(cr / 255, cg / 255, cb / 255)
         });
       }
     }
