@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PDF Text Edit</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <rect x="3" y="1" width="13" height="17" rx="2" fill="white" opacity="0.95"/>
+          <path d="M16 1 L19 4 L16 4 Z" fill="#f97316"/>
+          <rect x="16" y="4" width="3" height="14" rx="0" fill="white" opacity="0.7"/>
+          <line x1="6" y1="7" x2="13" y2="7" stroke="#334155" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="6" y1="10" x2="13" y2="10" stroke="#334155" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="6" y1="13" x2="10" y2="13" stroke="#334155" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- Pencil -->
+          <rect x="12" y="14" width="2.2" height="6" rx="0.5" fill="#f97316" transform="rotate(-45 13.1 17)"/>
+          <polygon points="10.5,19.5 11.8,18.2 12.5,19.5" fill="#fbbf24"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">PDF Text Edit</span>
+        <span class="brand-sub">Local editor · No uploads</span>
+      </div>
+    </header>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Status -->
+    <div id="status-wrap">
+      <div id="status-dot"></div>
+      <p id="status">Checking tab…</p>
+    </div>
+
+    <!-- Primary: Edit current PDF -->
+    <button id="open" class="btn btn-primary" disabled>
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 7.5h11M9 3.5l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Edit current PDF
+    </button>
+
+    <!-- Separator -->
+    <div class="or-row"><span class="or-line"></span><span class="or-label">or</span><span class="or-line"></span></div>
+
+    <!-- Secondary: Upload from device -->
+    <label class="btn btn-secondary" id="upload-label">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V3M4.5 6l3-3 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Upload PDF from device
+      <input type="file" id="file-input" accept=".pdf,application/pdf" hidden>
+    </label>
+
+    <!-- Footer -->
+    <p class="footer-hint">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#64748b" stroke-width="1"/><line x1="5.5" y1="4" x2="5.5" y2="7.5" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="2.8" r="0.5" fill="#64748b"/></svg>
+      Your PDF never leaves your device
+    </p>
+
+    <p id="error" class="error-msg"></p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "pdf-text-edit-local",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-only Chrome PDF text editing extension",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "pdfjs-dist": "4.10.38",
+    "pdf-lib": "1.17.1"
+  }
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PDF Text Edit</title>
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="mark">PDF</span><b>Text Edit</b></div>
+    <div class="actions">
+      <span id="filename">Loading PDF…</span>
+      <button id="undo" disabled title="Undo last action (Ctrl+Z)">↩ Undo</button>
+      <button id="redo" disabled title="Redo last undone action (Ctrl+Y)">↪ Redo</button>
+      <button id="delete">Delete mode</button>
+      <button id="save" class="primary" disabled>Save &amp; download</button>
+    </div>
+  </header>
+  <div id="notice">Click a text line to edit it inline. Toggle Delete mode to remove text.</div>
+  <main id="pages"></main>
+
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script type="module" src="editor.js"></script>
+</body>
+</html>
